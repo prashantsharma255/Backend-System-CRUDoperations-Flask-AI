@@ -5,11 +5,12 @@ from flask import make_response, jsonify
 import jwt
 from configs.config import dbconfig
 
+
 class user_model():
     def __init__(self):
         self.con = mysql.connector.connect(host=dbconfig['host'],user=dbconfig['username'],password=dbconfig['password'],database=dbconfig['database'])
         self.con.autocommit=True #Every future query will automatically get committed to the MySQL DB.
-        self.cur = self.con.cursor(dictionary=True) #Get Data in Dictionary format.
+        self.cur = self.con.cursor(dictionary=True) #Get Data in Dictionary format
         
     def all_user_model(self):
         self.cur.execute("SELECT * FROM users")
@@ -72,15 +73,15 @@ class user_model():
         else:
             return make_response({"message":"No Data Found"}, 204)
 
-    def upload_avatar_model(self, uid, db_path):
-        self.cur.execute(f"UPDATE users SET avatar='{db_path}' WHERE id={uid}")
+    def upload_file_model(self, uid, db_path):
+        self.cur.execute(f"UPDATE users SET file='{db_path}' WHERE id={uid}")
         if self.cur.rowcount>0:
             return make_response({"message":"FILE_UPLOADED_SUCCESSFULLY", "path":db_path},201)
         else:
             return make_response({"message":"NOTHING_TO_UPDATE"},204)
 
-    def get_avatar_path_model(self, uid):
-        self.cur.execute(f"SELECT avatar FROM users WHERE id={uid}")
+    def get_file_path_model(self, uid):
+        self.cur.execute(f"SELECT file FROM users WHERE id={uid}")
         result = self.cur.fetchall()
         if len(result)>0:
             print(type(result))
@@ -89,7 +90,7 @@ class user_model():
             return "No Data Found"  
         
     def user_login_model(self, username, password):
-        self.cur.execute(f"SELECT id, role, avatar, email, name, phone from users WHERE email='{username}' and password='{password}'")
+        self.cur.execute(f"SELECT id, role, file, email, name, phone from users WHERE email='{username}' and password='{password}'")
         result = self.cur.fetchall()
         if len(result)==1:
             exptime = datetime.now() + timedelta(minutes=15)

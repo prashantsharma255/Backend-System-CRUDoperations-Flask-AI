@@ -24,7 +24,7 @@ class auth_model():
                     if re.match("^Bearer *([^ ]+) *$", authorization, flags=0):
                         token = authorization.split(" ")[1]
                         try:
-                            tokendata = jwt.decode(token, "Sagar@123", algorithms="HS256")
+                            tokendata = jwt.decode(token, "prash", algorithms="HS256")
                         except Exception as e:
                             return make_response({"ERROR":str(e)}, 401)
                         print(tokendata)

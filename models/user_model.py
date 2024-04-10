@@ -5,7 +5,6 @@ from flask import make_response, jsonify
 import jwt
 from configs.config import dbconfig
 
-
 class user_model():
     def __init__(self):
         self.con = mysql.connector.connect(host=dbconfig['host'],user=dbconfig['username'],password=dbconfig['password'],database=dbconfig['database'])
@@ -22,16 +21,7 @@ class user_model():
             return "No Data Found"
     
     def add_user_model(self,data):
-        self.cur.execute(f"INSERT INTO users(name, email, phone, role, password) VALUES('{data['name']}', '{data['email']}', '{data['phone']}', '{data['role']}', '{data['password']}')")
-        return make_response({"message":"CREATED_SUCCESSFULLY"},201)
-    
-    def add_multiple_users_model(self, data):
-        # Generating query for multiple inserts
-        qry = "INSERT INTO users(name, email, phone, role, password) VALUES "
-        for userdata in data:
-            qry += f" ('{userdata['name']}', '{userdata['email']}', '{userdata['phone']}', {userdata['role']},'{userdata['password']}'),"
-        finalqry = qry.rstrip(",")
-        self.cur.execute(finalqry)
+        self.cur.execute(f"INSERT INTO users(name, email, phone, password) VALUES('{data['name']}', '{data['email']}', '{data['phone']}', '{data['password']}')")
         return make_response({"message":"CREATED_SUCCESSFULLY"},201)
 
     def delete_user_model(self,id):
@@ -41,9 +31,8 @@ class user_model():
         else:
             return make_response({"message":"CONTACT_DEVELOPER"},500)
         
-    
     def update_user_model(self,data):
-        self.cur.execute(f"UPDATE users SET name='{data['name']}', email='{data['email']}', phone='{data['phone']}' WHERE id={data['id']}")
+        self.cur.execute(f"UPDATE users SET name='{data['name']}', email='{data['email']}', phone='{data['phone']}', '{data['password']}' WHERE id={data['id']}")
         if self.cur.rowcount>0:
             return make_response({"message":"UPDATED_SUCCESSFULLY"},201)
         else:
@@ -72,36 +61,19 @@ class user_model():
             return make_response({"page":pno, "per_page":limit,"this_page":len(result), "payload":result})
         else:
             return make_response({"message":"No Data Found"}, 204)
-
-    def upload_file_model(self, uid, db_path):
-        self.cur.execute(f"UPDATE users SET file='{db_path}' WHERE id={uid}")
-        if self.cur.rowcount>0:
-            return make_response({"message":"FILE_UPLOADED_SUCCESSFULLY", "path":db_path},201)
-        else:
-            return make_response({"message":"NOTHING_TO_UPDATE"},204)
-
-    def get_file_path_model(self, uid):
-        self.cur.execute(f"SELECT file FROM users WHERE id={uid}")
-        result = self.cur.fetchall()
-        if len(result)>0:
-            print(type(result))
-            return {"payload":result}
-        else:
-            return "No Data Found"  
         
-    def user_login_model(self, username, password):
-        self.cur.execute(f"SELECT id, role, file, email, name, phone from users WHERE email='{username}' and password='{password}'")
+    def user_login_model(self, data): #username, password):
+        self.cur.execute(f"SELECT id, name, email, phone, role_id FROM users WHERE email='{data['email']}' AND password='{data['password']}'")
         result = self.cur.fetchall()
-        if len(result)==1:
-            exptime = datetime.now() + timedelta(minutes=15)
-            exp_epoc_time = exptime.timestamp()
-            data = {
-                "payload":result[0],
-                "exp":int(exp_epoc_time)
-            }
-            print(int(exp_epoc_time))
-            jwt_token = jwt.encode(data, "Sagar@123", algorithm="HS256")
-            return make_response({"token":jwt_token}, 200)
-        else:
-            return make_response({"message":"NO SUCH USER"}, 204)
+        exptime = datetime.now() + timedelta(minutes=15)
+        exp_epoc_time = int(exptime.timestamp())
+        payload = {
+            'payload':result[0],
+            'exp':exp_epoc_time
+        }
+        jwt_token = jwt.encode(payload, 'prash', algorithm='HS256')
+        print(jwt_token)
+        return make_response({'token':jwt_token}, 200)
+        # else:
+        #     return make_response({"message":"NO SUCH USER"}, 204)
             
